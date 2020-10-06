@@ -1,26 +1,30 @@
+#include "complex.h"
 #include <iostream>
 #include <algorithm>
 #include <vector>
-#include "complex.h"
 
-void Sort(std::vector<Complex> &v)
+void Sort(std::vector<Complex> &vComplex)
 {
-	for(int i = 0; i < v.size(); ++i)
-	for(int j = i + 1; j < v.size(); ++j)
-	if(v[j] < v[i]) std::swap(v[i], v[j]);
+	for(int i = 0; i < vComplex.size(); ++i)
+		for(int j = i + 1; j < vComplex.size(); ++j)
+			if(vComplex[j] < vComplex[i]) 
+				std::swap(vComplex[i], vComplex[j]);
 }
 
 int main()
 {
-	int n;
+	int n; 
 	std::cin >> n;
 	std::vector<Complex> v(n);
 	
+	// read n complex numbers
 	for(int i = 0; i < n; ++i)
 		std::cin >> v[i];
-
-	Sort(v);
 	
+	// sort the given complex numbers by their absolute vakue in increasing order
+	Sort(v);
+	    
+	// print the complex numbers
 	for(int i = 0; i < n; ++i)
 		std::cout << v[i] << " ";
 	std::cout << '\n';

@@ -1,13 +1,16 @@
+CXX = g++
+CXXFLAGS = -c
+
 all: main
 
 main: main.o complex.o
-	g++ main.o complex.o -o main
+	$(CXX) main.o complex.o -o main
 
-main.o: main.cpp
-	g++ -c main.cpp -o main.o
+main.o: main.cpp complex.h
+	$(CXX) $(CXXFLAGS) main.cpp -o main.o
 
 complex.o: complex.cpp
-	g++ -c complex.cpp -o complex.o
+	$(CXX) $(CXXFLAGS) complex.cpp -o complex.o
 
 clean:
 	rm *.o main
