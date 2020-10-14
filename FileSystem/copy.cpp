@@ -33,6 +33,7 @@ int main(int argc, char* argv[])
 		exit(errno);
 	}
 
+	// print the logical and apparent size of the source file
 	system("echo \"Logical size: \"");
 	printSize("du -h ", argv[1]);
 
@@ -54,7 +55,6 @@ int main(int argc, char* argv[])
 		if(readBytes == 0)
 			break;
 
-		buffer[readBytes] = '\0';
 		write(dest_fd, buffer, readBytes);
 	}
 
@@ -62,6 +62,8 @@ int main(int argc, char* argv[])
 	close(dest_fd);	
 
 	std::cout << '\n';
+	
+	// print the logical and apparent size of the destination file
 	system("echo \"Logical size: \"");
 	printSize("du -h ", argv[2]);
 
