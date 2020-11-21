@@ -118,7 +118,7 @@ int main()
 
 			dup2(fd, fileno(stdin));
 
-			if (command[0] == '/')
+			if (command[0] == '/' || command[0] == '.')
 				execv(command.c_str(), argv);
 			else
 				execvp(command.c_str(), argv);
