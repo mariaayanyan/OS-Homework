@@ -1,22 +1,31 @@
 #include "ParallelScheduler.h"
 #include <iostream>
-
+#include <unistd.h>
 
 void f(void* arg)
 {
-	std::cout << "f" << *(int*)arg << '\n';
+	int* i = (int*)arg;
+	
+	std::cout << "Thread " << gettid() << " is working on " << *i << std::endl;
+	
+	delete i;
 }
-
 
 int main()
 {
-	ParallelScheduler* scheduler = new ParallelScheduler(3);
+	ParallelScheduler* scheduler = new ParallelScheduler(16);
 
-	for(int i = 0; i < 12; ++i)
+	for(int i = 0; i < 10000; ++i)
 	{
-		int* arg = &i;
-		scheduler->run(f, arg);
+		scheduler->run(f, new int(i));
 	}
-	
-	//delete scheduler;
+
+	while(true) 
+	{
+		sleep(2);
+		std::cout << "Main is working" << std::endl;
+	}
+
+	delete scheduler;
+	return 0;
 }

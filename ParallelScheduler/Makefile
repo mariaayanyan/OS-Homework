@@ -1,16 +1,14 @@
-CXX = g++
-CXXFLAGS = -c
+all: ParallelScheduler
 
-all: main
-
-main: main.o ParallelScheduler.o
-	$(CXX) main.o ParallelScheduler.o -lpthread -o main
+ParallelScheduler: main.o ParallelScheduler.o
+	g++ -pthread main.o ParallelScheduler.o -o ParallelScheduler
 
 main.o: main.cpp ParallelScheduler.h
-	$(CXX) $(CXXFLAGS) main.cpp -o main.o
+	g++ -c main.cpp -o main.o
 
-ParallelScheduler.o: ParallelScheduler.cpp
-	$(CXX) $(CXXFLAGS) ParallelScheduler.cpp -o ParallelScheduler.o
+ParallelScheduler.o: ParallelScheduler.cpp 
+	g++ -c ParallelScheduler.cpp -o ParallelScheduler.o
 
 clean:
-	rm *.o main
+	rm *.o ParallelScheduler 
+	

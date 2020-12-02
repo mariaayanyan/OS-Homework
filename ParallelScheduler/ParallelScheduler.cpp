@@ -2,19 +2,20 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <signal.h>
 
-ParallelScheduler::ParallelScheduler(int count) : 
-			capacity(count), 
-			threads(std::vector<pthread_t>(count)),
-			lock(new pthread_mutex_t()),
-			cond(new pthread_cond_t())
+ParallelScheduler::ParallelScheduler(int capacity) : capacity(capacity)
 {
-	pthread_mutex_init(lock, NULL);
-	pthread_cond_init(cond, NULL);
-	
-	for (auto& thread : threads)
+	this->threads = new pthread_t[this->capacity];
+	this->queueLock = new pthread_mutex_t();
+	this->hasFunction = new pthread_cond_t();
+
+	pthread_mutex_init(this->queueLock, NULL);
+	pthread_cond_init(this->hasFunction, NULL);
+
+	for(int i = 0; i < this->capacity; ++i)
 	{
-		int error = pthread_create(&thread, NULL, execute, this);
+		int error = pthread_create(&this->threads[i], NULL, execute, this);
 		if(error)
 		{
 			perror("Failed to create a thread");
@@ -22,58 +23,61 @@ ParallelScheduler::ParallelScheduler(int count) :
 		}
 	}
 }
-	
-void ParallelScheduler::run(void (*func)(void*), void* arg) 
+
+void ParallelScheduler::run(scheduler_fn_t func, void* arg)
 {
 	// lock the queue
-	pthread_mutex_lock(lock);
-
+	pthread_mutex_lock(this->queueLock);
+	
 	// queue the function for execution
-	functions.push(std::make_pair(func, arg));
+	this->functions.push(std::make_pair(func, arg));
 
 	// unlock the queue
-	pthread_mutex_unlock(lock);
-			
+	pthread_mutex_unlock(this->queueLock);
+
 	// signal about a new function
-	pthread_cond_broadcast(cond);
+	pthread_cond_signal(this->hasFunction);
 }
 
 void* ParallelScheduler::execute(void* arg)
 {
-	ParallelScheduler* sch = (ParallelScheduler*)arg;
+	ParallelScheduler* scheduler = (ParallelScheduler*)arg;
 
 	while(true)
 	{
 		// lock the queue
-		pthread_mutex_lock(sch->lock);
+		pthread_mutex_lock(scheduler->queueLock);
 
 		// wait for a function to run
-		while(sch->functions.empty())
+		while(scheduler->functions.empty())
 		{
-			pthread_cond_wait(sch->cond, sch->lock);
+			pthread_cond_wait(scheduler->hasFunction, scheduler->queueLock);
 		}
 
-		auto cur = sch->functions.front();
-		sch->functions.pop();
+		auto funcPair = scheduler->functions.front();
+		scheduler->functions.pop();
 
 		// unlock the queue
-		pthread_mutex_unlock(sch->lock);
+		pthread_mutex_unlock(scheduler->queueLock);
 
 		// execute the function
-		cur.first(cur.second);
+		funcPair.first(funcPair.second);
 	}
-
-	return nullptr; 
+	return NULL;
 }
 
 ParallelScheduler::~ParallelScheduler()
-{		
-	for(auto& thread : threads)
-		pthread_cancel(thread);
-		
-	pthread_mutex_destroy(lock);
-	pthread_cond_destroy(cond);
+{
+	for(int i = 0; i < this->capacity; ++i)
+	{
+		pthread_kill(this->threads[i], SIGKILL);
+	}
 
-	delete lock; 
-	delete cond;	 
+	delete[] this->threads;
+
+	pthread_mutex_destroy(this->queueLock);
+	delete this->queueLock;
+
+	pthread_cond_destroy(this->hasFunction);
+	delete this->hasFunction;
 }
